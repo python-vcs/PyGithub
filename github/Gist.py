@@ -33,13 +33,16 @@
 #                                                                              #
 ################################################################################
 
-import github.GithubObject
-import github.PaginatedList
+from __future__ import absolute_import
+
+import six
 
 import github.GistComment
-import github.NamedUser
 import github.GistFile
 import github.GistHistoryState
+import github.GithubObject
+import github.NamedUser
+import github.PaginatedList
 
 
 class Gist(github.GithubObject.CompletableGithubObject):
@@ -208,7 +211,7 @@ class Gist(github.GithubObject.CompletableGithubObject):
         :param body: string
         :rtype: :class:`github.GistComment.GistComment`
         """
-        assert isinstance(body, (str, unicode)), body
+        assert isinstance(body, six.string_types), body
         post_parameters = {
             "body": body,
         }
@@ -247,13 +250,13 @@ class Gist(github.GithubObject.CompletableGithubObject):
         :param files: dict of string to :class:`github.InputFileContent.InputFileContent`
         :rtype: None
         """
-        assert description is github.GithubObject.NotSet or isinstance(description, (str, unicode)), description
-        assert files is github.GithubObject.NotSet or all(element is None or isinstance(element, github.InputFileContent) for element in files.itervalues()), files
+        assert description is github.GithubObject.NotSet or isinstance(description, six.string_types), description
+        assert files is github.GithubObject.NotSet or all(element is None or isinstance(element, github.InputFileContent) for element in six.itervalues(files)), files
         post_parameters = dict()
         if description is not github.GithubObject.NotSet:
             post_parameters["description"] = description
         if files is not github.GithubObject.NotSet:
-            post_parameters["files"] = dict((key, None if value is None else value._identity) for key, value in files.iteritems())
+            post_parameters["files"] = dict((key, None if value is None else value._identity) for key, value in six.iteritems(files))
         headers, data = self._requester.requestJsonAndCheck(
             "PATCH",
             self.url,
@@ -267,7 +270,7 @@ class Gist(github.GithubObject.CompletableGithubObject):
         :param id: integer
         :rtype: :class:`github.GistComment.GistComment`
         """
-        assert isinstance(id, (int, long)), id
+        assert isinstance(id, six.integer_types), id
         headers, data = self._requester.requestJsonAndCheck(
             "GET",
             self.url + "/comments/" + str(id)

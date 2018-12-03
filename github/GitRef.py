@@ -30,9 +30,12 @@
 #                                                                              #
 ################################################################################
 
-import github.GithubObject
+from __future__ import absolute_import
+
+import six
 
 import github.GitObject
+import github.GithubObject
 
 
 class GitRef(github.GithubObject.CompletableGithubObject):
@@ -84,7 +87,7 @@ class GitRef(github.GithubObject.CompletableGithubObject):
         :param force: bool
         :rtype: None
         """
-        assert isinstance(sha, (str, unicode)), sha
+        assert isinstance(sha, six.string_types), sha
         assert force is github.GithubObject.NotSet or isinstance(force, bool), force
         post_parameters = {
             "sha": sha,

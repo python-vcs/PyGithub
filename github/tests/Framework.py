@@ -36,13 +36,19 @@
 #                                                                              #
 ################################################################################
 
+from __future__ import absolute_import, print_function
+
 import json
 import os
 import sys
 import traceback
 import unittest
 
+import six
+
 import github
+import github.GithubObject
+import github.Requester
 
 python2 = sys.hexversion < 0x03000000
 atLeastPython3 = sys.hexversion >= 0x03000000
@@ -93,7 +99,7 @@ class RecordingConnection:  # pragma no cover (Class useful only when recording 
         self.__cnx = self._realConnection(host, port, *args, **kwds)
 
     def request(self, verb, url, input, headers):
-        print verb, url, input, headers,
+        print(verb, url, input, headers)
         self.__cnx.request(verb, url, input, headers)
         # fixAuthorizationHeader changes the parameter directly to remove Authorization token.
         # however, this is the real dictionary that *will be sent* by "requests",
@@ -116,7 +122,7 @@ class RecordingConnection:  # pragma no cover (Class useful only when recording 
         res = self.__cnx.getresponse()
 
         status = res.status
-        print "=>", status
+        print("=>", status)
         headers = res.getheaders()
         output = res.read()
 
@@ -174,7 +180,7 @@ class ReplayingConnection:
         self.__testCase.assertEqual(self.__splitUrl(url), self.__splitUrl(readLine(self.__file)))
         self.__testCase.assertEqual(headers, eval(readLine(self.__file)))
         expectedInput = readLine(self.__file)
-        if isinstance(input, (str, unicode)):
+        if isinstance(input, six.string_types):
             if input.startswith("{"):
                 self.__testCase.assertEqual(json.loads(input.replace('\n', '').replace('\r', '')), json.loads(expectedInput))
             elif python2:  # @todo Test in all cases, including Python 3.4+

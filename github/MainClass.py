@@ -47,37 +47,46 @@
 #                                                                              #
 ################################################################################
 
+from __future__ import absolute_import
+
 import datetime
-
-import urllib
 import pickle
-import time
 import sys
-from httplib import HTTPSConnection
+import time
+
 import jwt
+import six
+from six.moves.http_client import HTTPSConnection
 
-from Requester import Requester, json
-import AuthenticatedUser
-import NamedUser
-import Organization
-import Gist
-import github.PaginatedList
-import Repository
-import Installation
-import Legacy
-import License
-import Topic
+import github.Commit
+import github.ContentFile
 import github.GithubObject
-import HookDescription
-import GitignoreTemplate
-import Status
-import StatusMessage
-import RateLimit
-import InstallationAuthorization
-import GithubException
-import Invitation
-
-import Consts
+import github.Issue
+import github.PaginatedList
+import github.Project
+from github import (
+    AuthenticatedUser,
+    Consts,
+    Gist,
+    GitignoreTemplate,
+    HookDescription,
+    Installation,
+    InstallationAuthorization,
+    License,
+    NamedUser,
+    Organization,
+    RateLimit,
+    Repository,
+    Status,
+    StatusMessage,
+    Topic,
+)
+from github.GithubException import (
+    BadCredentialsException,
+    GithubException,
+    UnknownObjectException,
+)
+from github.Requester import Requester, json
 
 atLeastPython3 = sys.hexversion >= 0x03000000
 
@@ -108,14 +117,14 @@ class Github(object):
         :param verify: boolean or string
         """
 
-        assert login_or_token is None or isinstance(login_or_token, (str, unicode)), login_or_token
-        assert password is None or isinstance(password, (str, unicode)), password
-        assert jwt is None or isinstance(jwt, (str, unicode)), jwt
-        assert isinstance(base_url, (str, unicode)), base_url
-        assert isinstance(timeout, (int, long)), timeout
-        assert client_id is None or isinstance(client_id, (str, unicode)), client_id
-        assert client_secret is None or isinstance(client_secret, (str, unicode)), client_secret
-        assert user_agent is None or isinstance(user_agent, (str, unicode)), user_agent
+        assert login_or_token is None or isinstance(login_or_token, six.string_types), login_or_token
+        assert password is None or isinstance(password, six.string_types), password
+        assert jwt is None or isinstance(jwt, six.string_types), jwt
+        assert isinstance(base_url, six.string_types), base_url
+        assert isinstance(timeout, six.integer_types), timeout
+        assert client_id is None or isinstance(client_id, six.string_types), client_id
+        assert client_secret is None or isinstance(client_secret, six.string_types), client_secret
+        assert user_agent is None or isinstance(user_agent, six.string_types), user_agent
         assert isinstance(api_preview, (bool))
         self.__requester = Requester(login_or_token, password, jwt, base_url, timeout, client_id, client_secret, user_agent, per_page, api_preview, verify)
 
@@ -195,7 +204,7 @@ class Github(object):
         :rtype: :class:`github.License.License`
         """
 
-        assert isinstance(key, (str, unicode)), key
+        assert isinstance(key, six.string_types), key
         headers, data = self.__requester.requestJsonAndCheck(
             "GET",
             "/licenses/" + key
@@ -223,7 +232,7 @@ class Github(object):
         :param login: string
         :rtype: :class:`github.NamedUser.NamedUser`
         """
-        assert login is github.GithubObject.NotSet or isinstance(login, (str, unicode)), login
+        assert login is github.GithubObject.NotSet or isinstance(login, six.string_types), login
         if login is github.GithubObject.NotSet:
             return AuthenticatedUser.AuthenticatedUser(self.__requester, {}, {"url": "/user"}, completed=False)
         else:
@@ -239,7 +248,7 @@ class Github(object):
         :param since: integer
         :rtype: :class:`github.PaginatedList.PaginatedList` of :class:`github.NamedUser.NamedUser`
         """
-        assert since is github.GithubObject.NotSet or isinstance(since, (int, long)), since
+        assert since is github.GithubObject.NotSet or isinstance(since, six.integer_types), since
         url_parameters = dict()
         if since is not github.GithubObject.NotSet:
             url_parameters["since"] = since
@@ -256,7 +265,7 @@ class Github(object):
         :param login: string
         :rtype: :class:`github.Organization.Organization`
         """
-        assert isinstance(login, (str, unicode)), login
+        assert isinstance(login, six.string_types), login
         headers, data = self.__requester.requestJsonAndCheck(
             "GET",
             "/orgs/" + login
@@ -269,7 +278,7 @@ class Github(object):
         :param since: integer
         :rtype: :class:`github.PaginatedList.PaginatedList` of :class:`github.Organization.Organization`
         """
-        assert since is github.GithubObject.NotSet or isinstance(since, (int, long)), since
+        assert since is github.GithubObject.NotSet or isinstance(since, six.integer_types), since
         url_parameters = dict()
         if since is not github.GithubObject.NotSet:
             url_parameters["since"] = since
@@ -285,8 +294,8 @@ class Github(object):
         :calls: `GET /repos/:owner/:repo <http://developer.github.com/v3/repos>`_ or `GET /repositories/:id <http://developer.github.com/v3/repos>`_
         :rtype: :class:`github.Repository.Repository`
         """
-        assert isinstance(full_name_or_id, (str, unicode, int, long)), full_name_or_id
-        url_base = "/repositories/" if isinstance(full_name_or_id, int) or isinstance(full_name_or_id, long) else "/repos/"
+        assert isinstance(full_name_or_id, (six.string_types, six.integer_types)), full_name_or_id
+        url_base = "/repositories/" if isinstance(full_name_or_id, six.integer_types) else "/repos/"
         url = "%s%s" % (url_base, full_name_or_id)
         if lazy:
             return Repository.Repository(self.__requester, {}, {"url": url}, completed=False)
@@ -302,7 +311,7 @@ class Github(object):
         :param since: integer
         :rtype: :class:`github.PaginatedList.PaginatedList` of :class:`github.Repository.Repository`
         """
-        assert since is github.GithubObject.NotSet or isinstance(since, (int, long)), since
+        assert since is github.GithubObject.NotSet or isinstance(since, six.integer_types), since
         url_parameters = dict()
         if since is not github.GithubObject.NotSet:
             url_parameters["since"] = since
@@ -332,7 +341,7 @@ class Github(object):
         :param id: string
         :rtype: :class:`github.Gist.Gist`
         """
-        assert isinstance(id, (str, unicode)), id
+        assert isinstance(id, six.string_types), id
         headers, data = self.__requester.requestJsonAndCheck(
             "GET",
             "/gists/" + id
@@ -365,7 +374,7 @@ class Github(object):
         :param qualifiers: keyword dict query qualifiers
         :rtype: :class:`github.PaginatedList.PaginatedList` of :class:`github.Repository.Repository`
         """
-        assert isinstance(query, (str, unicode)), query
+        assert isinstance(query, six.string_types), query
         url_parameters = dict()
         if sort is not github.GithubObject.NotSet:  # pragma no branch (Should be covered)
             assert sort in ('stars', 'forks', 'updated'), sort
@@ -400,7 +409,7 @@ class Github(object):
         :param qualifiers: keyword dict query qualifiers
         :rtype: :class:`github.PaginatedList.PaginatedList` of :class:`github.NamedUser.NamedUser`
         """
-        assert isinstance(query, (str, unicode)), query
+        assert isinstance(query, six.string_types), query
         url_parameters = dict()
         if sort is not github.GithubObject.NotSet:
             assert sort in ('followers', 'repositories', 'joined'), sort
@@ -435,7 +444,7 @@ class Github(object):
         :param qualifiers: keyword dict query qualifiers
         :rtype: :class:`github.PaginatedList.PaginatedList` of :class:`github.Issue.Issue`
         """
-        assert isinstance(query, (str, unicode)), query
+        assert isinstance(query, six.string_types), query
         url_parameters = dict()
         if sort is not github.GithubObject.NotSet:
             assert sort in ('comments', 'created', 'updated'), sort
@@ -471,7 +480,7 @@ class Github(object):
         :param qualifiers: keyword dict query qualifiers
         :rtype: :class:`github.PaginatedList.PaginatedList` of :class:`github.ContentFile.ContentFile`
         """
-        assert isinstance(query, (str, unicode)), query
+        assert isinstance(query, six.string_types), query
         url_parameters = dict()
         if sort is not github.GithubObject.NotSet:  # pragma no branch (Should be covered)
             assert sort in ('indexed',), sort
@@ -509,7 +518,7 @@ class Github(object):
         :param qualifiers: keyword dict query qualifiers
         :rtype: :class:`github.PaginatedList.PaginatedList` of :class:`github.Commit.Commit`
         """
-        assert isinstance(query, (str, unicode)), query
+        assert isinstance(query, six.string_types), query
         url_parameters = dict()
         if sort is not github.GithubObject.NotSet:  # pragma no branch (Should be covered)
             assert sort in ('author-date', 'committer-date'), sort
@@ -545,7 +554,7 @@ class Github(object):
         :param qualifiers: keyword dict query qualifiers
         :rtype: :class:`github.PaginatedList.PaginatedList` of :class:`github.Topic.Topic`
         """
-        assert isinstance(query, (str, unicode)), query
+        assert isinstance(query, six.string_types), query
         url_parameters = dict()
 
         query_chunks = []
@@ -575,7 +584,7 @@ class Github(object):
         :param context: :class:`github.Repository.Repository`
         :rtype: string
         """
-        assert isinstance(text, (str, unicode)), text
+        assert isinstance(text, six.string_types), text
         assert context is github.GithubObject.NotSet or isinstance(context, github.Repository.Repository), context
         post_parameters = {
             "text": text
@@ -596,7 +605,7 @@ class Github(object):
         :param name: string
         :rtype: :class:`github.HookDescription.HookDescription`
         """
-        assert isinstance(name, (str, unicode)), name
+        assert isinstance(name, six.string_types), name
         headers, attributes = self.__requester.requestJsonAndCheck(
             "GET",
             "/hooks/" + name
@@ -630,7 +639,7 @@ class Github(object):
         :calls: `GET /gitignore/templates/:name <http://developer.github.com/v3/gitignore>`_
         :rtype: :class:`github.GitignoreTemplate.GitignoreTemplate`
         """
-        assert isinstance(name, (str, unicode)), name
+        assert isinstance(name, six.string_types), name
         headers, attributes = self.__requester.requestJsonAndCheck(
             "GET",
             "/gitignore/templates/" + name
@@ -802,16 +811,16 @@ class GithubIntegration(object):
                 completed=True
             )
         elif response.status == 403:
-            raise GithubException.BadCredentialsException(
+            raise BadCredentialsException(
                 status=response.status,
                 data=response_text
             )
         elif response.status == 404:
-            raise GithubException.UnknownObjectException(
+            raise UnknownObjectException(
                 status=response.status,
                 data=response_text
             )
-        raise GithubException.GithubException(
+        raise GithubException(
             status=response.status,
             data=response_text
         )

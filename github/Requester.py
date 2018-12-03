@@ -52,21 +52,31 @@
 #                                                                              #
 ################################################################################
 
+from __future__ import absolute_import
+
 import base64
 import json
 import logging
 import mimetypes
 import os
 import re
-import requests
 import sys
 import time
-import urllib
-import urlparse
 from io import IOBase
 
-import Consts
-import GithubException
+import requests
+import six
+from six.moves import urllib_parse
+
+from github import Consts
+from github.GithubException import (
+    BadCredentialsException,
+    BadUserAgentException,
+    GithubException,
+    RateLimitExceededException,
+    TwoFactorException,
+    UnknownObjectException,
+)
 
 atLeastPython3 = sys.hexversion >= 0x03000000
 
@@ -82,7 +92,7 @@ class RequestsResponse:
         if atLeastPython3:
             return self.headers.items()
         else:
-            return self.headers.iteritems()
+            return six.iteritems(self.headers)
 
     def read(self):
         return self.text
@@ -232,7 +242,7 @@ class Requester:
             self.__authorizationHeader = None
 
         self.__base_url = base_url
-        o = urlparse.urlparse(base_url)
+        o = urllib_parse.urlparse(base_url)
         self.__hostname = o.hostname
         self.__port = o.port
         self.__prefix = o.path
@@ -278,7 +288,7 @@ class Requester:
     def __customConnection(self, url):
         cnx = None
         if not url.startswith("/"):
-            o = urlparse.urlparse(url)
+            o = urllib_parse.urlparse(url)
             if o.hostname != self.__hostname or \
                (o.port and o.port != self.__port) or \
                (o.scheme != self.__scheme and not (o.scheme == "https" and self.__scheme == "http")):  # issue80
@@ -290,20 +300,20 @@ class Requester:
 
     def __createException(self, status, headers, output):
         if status == 401 and output.get("message") == "Bad credentials":
-            cls = GithubException.BadCredentialsException
+            cls = BadCredentialsException
         elif status == 401 and Consts.headerOTP in headers and re.match(r'.*required.*', headers[Consts.headerOTP]):
-            cls = GithubException.TwoFactorException  # pragma no cover (Should be covered)
+            cls = TwoFactorException  # pragma no cover (Should be covered)
         elif status == 403 and output.get("message").startswith("Missing or invalid User Agent string"):
-            cls = GithubException.BadUserAgentException
+            cls = BadUserAgentException
         elif status == 403 and (
             output.get("message").lower().startswith("api rate limit exceeded")
             or output.get("message").lower().endswith("please wait a few minutes before you try again.")
         ):
-            cls = GithubException.RateLimitExceededException
+            cls = RateLimitExceededException
         elif status == 404 and output.get("message") == "Not Found":
-            cls = GithubException.UnknownObjectException
+            cls = UnknownObjectException
         else:
-            cls = GithubException.GithubException
+            cls = GithubException
         return cls(status, output)
 
     def __structuredFromJson(self, data):
@@ -314,7 +324,7 @@ class Requester:
                 data = data.decode("utf-8")  # pragma no cover (Covered by Issue142.testDecodeJson with Python 3)
             try:
                 return json.loads(data)
-            except ValueError, e:
+            except ValueError as e:
                 return {'data': data}
 
     def requestJson(self, verb, url, parameters=None, headers=None, input=None, cnx=None):
@@ -329,7 +339,7 @@ class Requester:
             eol = "\r\n"
 
             encoded_input = ""
-            for name, value in input.iteritems():
+            for name, value in six.iteritems(input):
                 encoded_input += "--" + boundary + eol
                 encoded_input += "Content-Disposition: form-data; name=\"" + name + "\"" + eol
                 encoded_input += eol
@@ -416,7 +426,7 @@ class Requester:
             return self.__requestRaw(original_cnx, verb, url, requestHeaders, input)
 
         if status == 301 and 'location' in responseHeaders:
-            o = urlparse.urlparse(responseHeaders['location'])
+            o = urllib_parse.urlparse(responseHeaders['location'])
             return self.__requestRaw(original_cnx, verb, o.path, requestHeaders, input)
 
         return status, responseHeaders, output
@@ -434,7 +444,7 @@ class Requester:
         if url.startswith("/"):
             url = self.__prefix + url
         else:
-            o = urlparse.urlparse(url)
+            o = urllib_parse.urlparse(url)
             assert o.hostname in [self.__hostname, "uploads.github.com", "status.github.com"], o.hostname
             assert o.path.startswith((self.__prefix, "/api/"))
             assert o.port == self.__port
@@ -447,7 +457,7 @@ class Requester:
         if len(parameters) == 0:
             return url
         else:
-            return url + "?" + urllib.urlencode(parameters)
+            return url + "?" + urllib_parse.urlencode(parameters)
 
     def __createConnection(self):
         kwds = {}

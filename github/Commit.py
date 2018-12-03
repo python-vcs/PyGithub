@@ -32,16 +32,19 @@
 #                                                                              #
 ################################################################################
 
-import github.GithubObject
-import github.PaginatedList
+from __future__ import absolute_import
 
-import github.GitCommit
-import github.NamedUser
-import github.CommitStatus
+import six
+
 import github.CommitCombinedStatus
-import github.File
-import github.CommitStats
 import github.CommitComment
+import github.CommitStats
+import github.CommitStatus
+import github.File
+import github.GitCommit
+import github.GithubObject
+import github.NamedUser
+import github.PaginatedList
 
 
 class Commit(github.GithubObject.CompletableGithubObject):
@@ -141,10 +144,10 @@ class Commit(github.GithubObject.CompletableGithubObject):
         :param position: integer
         :rtype: :class:`github.CommitComment.CommitComment`
         """
-        assert isinstance(body, (str, unicode)), body
-        assert line is github.GithubObject.NotSet or isinstance(line, (int, long)), line
-        assert path is github.GithubObject.NotSet or isinstance(path, (str, unicode)), path
-        assert position is github.GithubObject.NotSet or isinstance(position, (int, long)), position
+        assert isinstance(body, six.string_types), body
+        assert line is github.GithubObject.NotSet or isinstance(line, six.integer_types), line
+        assert path is github.GithubObject.NotSet or isinstance(path, six.string_types), path
+        assert position is github.GithubObject.NotSet or isinstance(position, six.integer_types), position
         post_parameters = {
             "body": body,
         }
@@ -170,10 +173,10 @@ class Commit(github.GithubObject.CompletableGithubObject):
         :param context: string
         :rtype: :class:`github.CommitStatus.CommitStatus`
         """
-        assert isinstance(state, (str, unicode)), state
-        assert target_url is github.GithubObject.NotSet or isinstance(target_url, (str, unicode)), target_url
-        assert description is github.GithubObject.NotSet or isinstance(description, (str, unicode)), description
-        assert context is github.GithubObject.NotSet or isinstance(context, (str, unicode)), context
+        assert isinstance(state, six.string_types), state
+        assert target_url is github.GithubObject.NotSet or isinstance(target_url, six.string_types), target_url
+        assert description is github.GithubObject.NotSet or isinstance(description, six.string_types), description
+        assert context is github.GithubObject.NotSet or isinstance(context, six.string_types), context
         post_parameters = {
             "state": state,
         }
