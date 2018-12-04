@@ -32,10 +32,12 @@
 #                                                                              #
 ################################################################################
 
-import Framework
+from __future__ import absolute_import
+
+import datetime
 
 import github
-import datetime
+from . import Framework
 
 
 class AuthenticatedUser(Framework.TestCase):
@@ -166,13 +168,13 @@ class AuthenticatedUser(Framework.TestCase):
     def testCreateGist(self):
         gist = self.user.create_gist(True, {"foobar.txt": github.InputFileContent("File created by PyGithub")}, "Gist created by PyGithub")
         self.assertEqual(gist.description, "Gist created by PyGithub")
-        self.assertEqual(gist.files.keys(), ["foobar.txt"])
+        self.assertEqual(list(gist.files.keys()), ["foobar.txt"])
         self.assertEqual(gist.files["foobar.txt"].content, "File created by PyGithub")
 
     def testCreateGistWithoutDescription(self):
         gist = self.user.create_gist(True, {"foobar.txt": github.InputFileContent("File created by PyGithub")})
         self.assertEqual(gist.description, None)
-        self.assertEqual(gist.files.keys(), ["foobar.txt"])
+        self.assertEqual(list(gist.files.keys()), ["foobar.txt"])
         self.assertEqual(gist.files["foobar.txt"].content, "File created by PyGithub")
 
     def testCreateKey(self):
@@ -244,7 +246,7 @@ class AuthenticatedUser(Framework.TestCase):
         self.assertListKeyEqual(self.user.get_notifications(all=True), lambda n: n.id, [])
 
     def testMarkNotificationsAsRead(self):
-        self.user.mark_notifications_as_read(datetime.datetime(2018, 10, 18, 18, 20, 01, 0))
+        self.user.mark_notifications_as_read(datetime.datetime(2018, 10, 18, 18, 20, 1, 0))
 
     def testGetTeams(self):
         self.assertListKeyEqual(self.user.get_teams(), lambda t: t.name, ["Owners", "Honoraries", "Honoraries", "Honoraries", "Honoraries", "Honoraries", "Honoraries", "Honoraries", "Honoraries", "Honoraries"])

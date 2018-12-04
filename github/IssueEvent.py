@@ -31,9 +31,12 @@
 #                                                                              #
 ################################################################################
 
-import github.GithubObject
+from __future__ import absolute_import
 
+import github.GithubObject
 import github.Issue
+import github.Label
+import github.Milestone
 import github.NamedUser
 
 
@@ -164,14 +167,6 @@ class IssueEvent(github.GithubObject.CompletableGithubObject):
         """
         self._completeIfNotSet(self._milestone)
         return self._milestone.value
-
-    @property
-    def rename(self):
-        """
-        :type: dict
-        """
-        self._completeIfNotSet(self._rename)
-        return self._rename.value
 
     @property
     def rename(self):

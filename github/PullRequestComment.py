@@ -34,10 +34,16 @@
 #                                                                              #
 ################################################################################
 
+from __future__ import absolute_import
+
+import six
+
 import github.GithubObject
 import github.NamedUser
+import github.PaginatedList
+import github.Reaction
+from github import Consts
 
-import Consts
 
 class PullRequestComment(github.GithubObject.CompletableGithubObject):
     """
@@ -183,7 +189,7 @@ class PullRequestComment(github.GithubObject.CompletableGithubObject):
         :param body: string
         :rtype: None
         """
-        assert isinstance(body, (str, unicode)), body
+        assert isinstance(body, six.string_types), body
         post_parameters = {
             "body": body,
         }
@@ -215,7 +221,7 @@ class PullRequestComment(github.GithubObject.CompletableGithubObject):
         :param reaction_type: string
         :rtype: :class:`github.Reaction.Reaction`
         """
-        assert isinstance(reaction_type, (str, unicode)), "reaction type should be a string"
+        assert isinstance(reaction_type, six.string_types), "reaction type should be a string"
         assert reaction_type in ["+1", "-1", "laugh", "confused", "heart", "hooray"], \
             "Invalid reaction type (https://developer.github.com/v3/reactions/#reaction-types)"
 
